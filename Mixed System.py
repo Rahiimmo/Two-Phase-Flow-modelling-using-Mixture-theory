@@ -1347,27 +1347,39 @@ for step in range(n_main_steps):
                 vg_next_pos = vg_pos_map[j + 1, i]                        # Position in the active list.
                 if vg_next_pos >= 0:                                      # Check if the (j + 1, i) interface is active.
                     vg_next_idx = vg_start_id + vg_next_pos               # Position in the reduced system.
-                    A_reduced[eq_idx_gas_y, vg_next_idx] += (phi[j + 1, i] * n_list[k_next, j + 1, i] *
+                    addA(rows, cols, data, eq_idx_gas_y, vg_next_idx, (phi[j + 1, i] * n_list[k_next, j + 1, i] *
                                                              (v_g_list[k, j + 1, i] + v_g_list[k, j + 2, i]) /
                                                              (2 * (d_y[j] + d_y[j + 1])
-                                                              * min(phi[j, i], phi[j + 1, i])))
+                                                              * min(phi[j, i], phi[j + 1, i]))))
+                    #A_reduced[eq_idx_gas_y, vg_next_idx] += (phi[j + 1, i] * n_list[k_next, j + 1, i] *
+                                                             #(v_g_list[k, j + 1, i] + v_g_list[k, j + 2, i]) /
+                                                             #(2 * (d_y[j] + d_y[j + 1])
+                                                              #* min(phi[j, i], phi[j + 1, i])))
 
             elif j == N_y - 2:      # When we are at the j = N_y - 2 row, the velocity of the next interface equals to
                                     # velocity of this interface, So will write it for this interface.
-                A_reduced[eq_idx_gas_y, vg_idx] += (phi[j + 1, i] * n_list[k_next, j + 1, i] *
+                addA(rows, cols, data, eq_idx_gas_y, vg_idx, (phi[j + 1, i] * n_list[k_next, j + 1, i] *
                                                              (v_g_list[k, j + 1, i] + v_g_list[k, j + 2, i]) /
                                                              (2 * (d_y[j] + d_y[j + 1])
-                                                              * min(phi[j, i], phi[j + 1, i])))
+                                                              * min(phi[j, i], phi[j + 1, i]))))
+                #A_reduced[eq_idx_gas_y, vg_idx] += (phi[j + 1, i] * n_list[k_next, j + 1, i] *
+                                                             #(v_g_list[k, j + 1, i] + v_g_list[k, j + 2, i]) /
+                                                             #(2 * (d_y[j] + d_y[j + 1])
+                                                              #* min(phi[j, i], phi[j + 1, i])))
 
             # Coefficient for v_g(j - 1/2, i)^(k + 1) - only if that interface is also active.
             if j > 0:
                 vg_prev_pos = vg_pos_map[j - 1, i]                        # Position in the active list.
                 if vg_prev_pos >= 0:                                      # Check if the (j - 1, i) interface is active.
                     vg_prev_idx = vg_start_id + vg_prev_pos               # Position in the reduced system.
-                    A_reduced[eq_idx_gas_y, vg_prev_idx] -= (phi[j, i] * n_list[k_next, j, i] *
+                    addA(rows, cols, data, eq_idx_gas_y, vg_prev_idx, -((phi[j, i] * n_list[k_next, j, i] *
                                                              (v_g_list[k, j, i] + v_g_list[k, j + 1, i]) /
                                                              (2 * (d_y[j] + d_y[j + 1])
-                                                              * min(phi[j, i], phi[j + 1, i])))
+                                                              * min(phi[j, i], phi[j + 1, i])))))
+                    #A_reduced[eq_idx_gas_y, vg_prev_idx] -= (phi[j, i] * n_list[k_next, j, i] *
+                                                             #(v_g_list[k, j, i] + v_g_list[k, j + 1, i]) /
+                                                             #(2 * (d_y[j] + d_y[j + 1])
+                                                              #* min(phi[j, i], phi[j + 1, i])))
 
             #elif j == 0:     # With j = 0, the previous interface is the top, so its velocity (here j - 1) is zero.
                 #b_reduced[eq_idx_gas_y] += (phi[j, i] * n_list[k_next, j, i] *
@@ -1384,9 +1396,12 @@ for step in range(n_main_steps):
                                                                n_list[k_next, j + 1, i], n_list[k_next, j, i + 1],
                                                                n_list[k_next, j + 1, i + 1], v_g_list[k, j + 1, i],
                                                                v_g_list[k, j + 1, i + 1], direction = 'vertical')
-                    A_reduced[eq_idx_gas_y, vg_next_idx] += (phi_n_upwind_average * (u_g_list[k, j, i + 1] +
+                    addA(rows, cols, data, eq_idx_gas_y, vg_next_idx, (phi_n_upwind_average * (u_g_list[k, j, i + 1] +
                                                                                 u_g_list[k, j + 1, i + 1]) /
-                                                        (4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))
+                                                        (4 * d_x[i] * min(phi[j, i], phi[j + 1, i]))))
+                    #A_reduced[eq_idx_gas_y, vg_next_idx] += (phi_n_upwind_average * (u_g_list[k, j, i + 1] +
+                                                                                #u_g_list[k, j + 1, i + 1]) /
+                                                        #(4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))
 
             # Coefficient for v_g(j + 1/2, i - 1)^(k + 1) - only if that interface is also active.
             if i > 0:
@@ -1398,14 +1413,18 @@ for step in range(n_main_steps):
                                                                n_list[k_next, j + 1, i - 1], n_list[k_next, j, i],
                                                                n_list[k_next, j + 1, i], v_g_list[k, j + 1, i - 1],
                                                                v_g_list[k, j + 1, i], direction = 'vertical')
-                    A_reduced[eq_idx_gas_y, vg_prev_idx] -= (phi_n_upwind_average * (u_g_list[k, j, i] +
+                    addA(rows, cols, data, eq_idx_gas_y, vg_prev_idx, -((phi_n_upwind_average * (u_g_list[k, j, i] +
                                                                                      u_g_list[k, j + 1, i]) /
-                                                        (4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))
+                                                        (4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))))
+                    #A_reduced[eq_idx_gas_y, vg_prev_idx] -= (phi_n_upwind_average * (u_g_list[k, j, i] +
+                                                                                     #u_g_list[k, j + 1, i]) /
+                                                        #(4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))
 
             # Pressure gradient terms (LHS of A9 first equation)
             # Coefficient for P_w(j + 1, i)^(k + 1)
             if j + 1 < N_y - 1:                                                                  # Row j + 1 is unknown.
-                A_reduced[eq_idx_gas_y, var_idx + N_x] += 2 * S_g_interface / (d_y[j] + d_y[j + 1])
+                addA(rows, cols, data, eq_idx_gas_y, var_idx + N_x, 2 * S_g_interface / (d_y[j] + d_y[j + 1]))
+                #A_reduced[eq_idx_gas_y, var_idx + N_x] += 2 * S_g_interface / (d_y[j] + d_y[j + 1])
 
             else:                                                 # Row j + 1 is a boundary condition. (j + 1 = N_y - 1)
                 # We know the last row is full of gas so s_w = 0
@@ -1413,7 +1432,8 @@ for step in range(n_main_steps):
                 b_reduced[eq_idx_gas_y] -= 2 * S_g_interface * P_w_bound / (d_y[j] + d_y[j + 1])
 
             # Coefficient for P_w(j, i)^(k + 1)
-            A_reduced[eq_idx_gas_y, var_idx] -= 2 * S_g_interface / (d_y[j] + d_y[j + 1])
+            addA(rows, cols, data, eq_idx_gas_y, var_idx, -(2 * S_g_interface / (d_y[j] + d_y[j + 1])))
+            #A_reduced[eq_idx_gas_y, var_idx] -= 2 * S_g_interface / (d_y[j] + d_y[j + 1])
 
             # Capillary pressure and gravity terms (RHS of A9 first equation)
             # Coefficient for P_c_(j, i)^(k + 1)
@@ -1437,22 +1457,27 @@ for step in range(n_main_steps):
                     phi_1 = min(phi[j, i], phi[j + 1, i])
                     phi_2 = min(phi[j, i + 1], phi[j + 1, i + 1])
                     phi_ave = min(phi_1, phi_2)
-                    A_reduced[eq_idx_gas_y, vg_next_idx] -= 2 * (phi_ave * miu_g / (d_x[i] * (d_x[i] + d_x[i + 1]) *
-                                                             min(phi[j, i], phi[j + 1, i])))
+                    addA(rows, cols, data, eq_idx_gas_y, vg_next_idx, -(2 * (phi_ave * miu_g / (d_x[i] * (d_x[i] + d_x[i + 1]) *
+                                                             min(phi[j, i], phi[j + 1, i])))))
+                    #A_reduced[eq_idx_gas_y, vg_next_idx] -= 2 * (phi_ave * miu_g / (d_x[i] * (d_x[i] + d_x[i + 1]) *
+                                                             #min(phi[j, i], phi[j + 1, i])))
 
             # Coefficient for v_g(j + 1/2, i)^(k + 1) at the first dx parenthesis.
             if i < N_x - 1:
                 phi_1 = min(phi[j, i], phi[j + 1, i])
                 phi_2 = min(phi[j, i + 1], phi[j + 1, i + 1])
                 phi_ave = min(phi_1, phi_2)
-                A_reduced[eq_idx_gas_y, vg_idx] += 2 * (phi_ave * miu_g / (d_x[i] * (d_x[i] + d_x[i + 1]) *
-                                                    min(phi[j, i], phi[j + 1, i])))
+                addA(rows, cols, data, eq_idx_gas_y, vg_idx, 2 * (phi_ave * miu_g / (d_x[i] * (d_x[i] + d_x[i + 1]) *
+                                                    min(phi[j, i], phi[j + 1, i]))))
+                #A_reduced[eq_idx_gas_y, vg_idx] += 2 * (phi_ave * miu_g / (d_x[i] * (d_x[i] + d_x[i + 1]) *
+                                                    #min(phi[j, i], phi[j + 1, i])))
 
             elif i == N_x - 1:                                                   # RIGHT WALL DRAG (No-Slip: v_wall = 0)
                 # Use internal porosity to ensure term is non-zero.
                 phi_internal = min(phi[j, i], phi[j + 1, i])
                 # Add 2*mu/dx^2 drag to diagonal
-                A_reduced[eq_idx_gas_y, vg_idx] += (phi_internal * 2.0 * miu_g / (d_x[i] * d_x[i] * phi_internal))
+                addA(rows, cols, data, eq_idx_gas_y, vg_idx, (phi_internal * 2.0 * miu_g / (d_x[i] * d_x[i] * phi_internal)))
+                #A_reduced[eq_idx_gas_y, vg_idx] += (phi_internal * 2.0 * miu_g / (d_x[i] * d_x[i] * phi_internal))
                 # When we at the rightmost column, we don't use the average dx[i] and dx[i + 1].
 
             # Coefficient for u_g(j + 1, i + 1/2)^k at the first dx parenthesis.
@@ -1478,14 +1503,17 @@ for step in range(n_main_steps):
                 phi_1 = min(phi[j, i - 1], phi[j + 1, i - 1])
                 phi_2 = min(phi[j, i], phi[j + 1, i])
                 phi_ave = min(phi_1, phi_2)
-                A_reduced[eq_idx_gas_y, vg_idx] += 2 * (phi_ave * miu_g / (d_x[i] * (d_x[i] + d_x[i - 1]) *
-                                                    min(phi[j, i], phi[j + 1, i])))
+                addA(rows, cols, data, eq_idx_gas_y, vg_idx, 2 * (phi_ave * miu_g / (d_x[i] * (d_x[i] + d_x[i - 1]) *
+                                                    min(phi[j, i], phi[j + 1, i]))))
+                #A_reduced[eq_idx_gas_y, vg_idx] += 2 * (phi_ave * miu_g / (d_x[i] * (d_x[i] + d_x[i - 1]) *
+                                                    #min(phi[j, i], phi[j + 1, i])))
 
             elif i == 0:                                                          # LEFT WALL DRAG (No-Slip: v_wall = 0)
                 # Use internal porosity to ensure term is non-zero.
                 phi_internal = min(phi[j, i], phi[j + 1, i])
                 # Add 2*mu/dx^2 drag to diagonal
-                A_reduced[eq_idx_gas_y, vg_idx] += (phi_internal * 2.0 * miu_g / (d_x[i] * d_x[i] * phi_internal))
+                addA(rows, cols, data, eq_idx_gas_y, vg_idx, (phi_internal * 2.0 * miu_g / (d_x[i] * d_x[i] * phi_internal)))
+                #A_reduced[eq_idx_gas_y, vg_idx] += (phi_internal * 2.0 * miu_g / (d_x[i] * d_x[i] * phi_internal))
                 # When we at the leftmost column, the velocity on the wall is zero.
 
             # Coefficient for v_g(j + 1/2, i - 1)^(k + 1) at second dx parenthesis - only if that interface is active.
@@ -1496,8 +1524,10 @@ for step in range(n_main_steps):
                     phi_1 = min(phi[j, i - 1], phi[j + 1, i - 1])
                     phi_2 = min(phi[j, i], phi[j + 1, i])
                     phi_ave = min(phi_1, phi_2)
-                    A_reduced[eq_idx_gas_y, vg_prev_idx] -= 2 * (phi_ave * miu_g / (d_x[i] * (d_x[i] + d_x[i - 1]) *
-                                                             min(phi[j, i], phi[j + 1, i])))
+                    addA(rows, cols, data, eq_idx_gas_y, vg_prev_idx, -(2 * (phi_ave * miu_g / (d_x[i] * (d_x[i] + d_x[i - 1]) *
+                                                             min(phi[j, i], phi[j + 1, i])))))
+                    #A_reduced[eq_idx_gas_y, vg_prev_idx] -= 2 * (phi_ave * miu_g / (d_x[i] * (d_x[i] + d_x[i - 1]) *
+                                                             #min(phi[j, i], phi[j + 1, i])))
 
             # Coefficient for u_g(j + 1, i - 1/2)^k at the second dx parenthesis.
             if i > 0:
@@ -1521,20 +1551,29 @@ for step in range(n_main_steps):
                 vg_next_pos = vg_pos_map[j + 1, i]                        # Position in the active list.
                 if vg_next_pos >= 0:                                      # Check if the (j + 1, i) interface is active.
                     vg_next_idx = vg_start_id + vg_next_pos               # Position in the reduced system.
-                    A_reduced[eq_idx_gas_y, vg_next_idx] -= 2 * ((2 * miu_g + kappa_g) * phi[j + 1, i] /
+                    addA(rows, cols, data, eq_idx_gas_y, vg_next_idx, -(2 * ((2 * miu_g + kappa_g) * phi[j + 1, i] /
                                                              ((d_y[j] + d_y[j + 1]) * d_y[j + 1] *
-                                                             min(phi[j, i], phi[j + 1, i])))
+                                                             min(phi[j, i], phi[j + 1, i])))))
+                    #A_reduced[eq_idx_gas_y, vg_next_idx] -= 2 * ((2 * miu_g + kappa_g) * phi[j + 1, i] /
+                                                             #((d_y[j] + d_y[j + 1]) * d_y[j + 1] *
+                                                             #min(phi[j, i], phi[j + 1, i])))
 
             elif j == N_y - 2:      # When we are at the j = N_y - 2 row, the velocity of the next interface equals to
                                     # the velocity of this interface, So we will write it for this interface.
-                A_reduced[eq_idx_gas_y, vg_idx] -= 2 * ((2 * miu_g + kappa_g) * phi[j + 1, i] /
+                addA(rows, cols, data, eq_idx_gas_y, vg_idx, -(2 * ((2 * miu_g + kappa_g) * phi[j + 1, i] /
                                                         ((d_y[j] + d_y[j + 1]) * d_y[j + 1] *
-                                                    min(phi[j, i], phi[j + 1, i])))
+                                                    min(phi[j, i], phi[j + 1, i])))))
+                #A_reduced[eq_idx_gas_y, vg_idx] -= 2 * ((2 * miu_g + kappa_g) * phi[j + 1, i] /
+                                                        #((d_y[j] + d_y[j + 1]) * d_y[j + 1] *
+                                                    #min(phi[j, i], phi[j + 1, i])))
 
             # Coefficient for v_g(j + 1/2, i)^(k + 1) at the first dy parenthesis.
-            A_reduced[eq_idx_gas_y, vg_idx] += 2 * ((2 * miu_g + kappa_g) * phi[j + 1, i] /
+            addA(rows, cols, data, eq_idx_gas_y, vg_idx, 2 * ((2 * miu_g + kappa_g) * phi[j + 1, i] /
                                                     ((d_y[j] + d_y[j + 1]) * d_y[j + 1] *
-                                                 min(phi[j, i], phi[j + 1, i])))
+                                                 min(phi[j, i], phi[j + 1, i]))))
+            #A_reduced[eq_idx_gas_y, vg_idx] += 2 * ((2 * miu_g + kappa_g) * phi[j + 1, i] /
+                                                    #((d_y[j] + d_y[j + 1]) * d_y[j + 1] *
+                                                 #min(phi[j, i], phi[j + 1, i])))
 
             # Coefficient for u_g(j + 1, i + 1/2)^k at the first dy parenthesis.
             if i < N_x - 1:
@@ -1553,17 +1592,22 @@ for step in range(n_main_steps):
                 # When we are at the leftmost column, the velocity on the wall is zero.
 
             # Coefficient for v_g(j + 1/2, i)^(k + 1) at the second dy parenthesis.
-            A_reduced[eq_idx_gas_y, vg_idx] += 2 * ((2 * miu_g + kappa_g) * phi[j, i] / ((d_y[j] + d_y[j + 1]) * d_y[j] *
-                                                min(phi[j, i], phi[j + 1, i])))
+            addA(rows, cols, data, eq_idx_gas_y, vg_idx, 2 * ((2 * miu_g + kappa_g) * phi[j, i] / ((d_y[j] + d_y[j + 1]) * d_y[j] *
+                                                min(phi[j, i], phi[j + 1, i]))))
+            #A_reduced[eq_idx_gas_y, vg_idx] += 2 * ((2 * miu_g + kappa_g) * phi[j, i] / ((d_y[j] + d_y[j + 1]) * d_y[j] *
+                                                #min(phi[j, i], phi[j + 1, i])))
 
             # Coefficient for v_g(j - 1/2, i)^(k + 1) at the second dy parenthesis - only if that interface is active.
             if j > 0:
                 vg_prev_pos = vg_pos_map[j - 1, i]                        # Position in the active list.
                 if vg_prev_pos >= 0:                                      # Check if the (j - 1, i) interface is active.
                     vg_prev_idx = vg_start_id + vg_prev_pos               # Position in the reduced system.
-                    A_reduced[eq_idx_gas_y, vg_prev_idx] -= 2 * ((2 * miu_g + kappa_g) * phi[j, i] /
+                    addA(rows, cols, data, eq_idx_gas_y, vg_prev_idx, -(2 * ((2 * miu_g + kappa_g) * phi[j, i] /
                                                                  ((d_y[j] + d_y[j + 1]) * d_y[j] *
-                                                             min(phi[j, i], phi[j + 1, i])))
+                                                             min(phi[j, i], phi[j + 1, i])))))
+                    #A_reduced[eq_idx_gas_y, vg_prev_idx] -= 2 * ((2 * miu_g + kappa_g) * phi[j, i] /
+                                                                 #((d_y[j] + d_y[j + 1]) * d_y[j] *
+                                                             #min(phi[j, i], phi[j + 1, i])))
 
             #elif j == 0:    # With j = 0, the previous interface is the top, so its velocity (here j - 1) is zero.
                 #b_reduced[eq_idx_gas_y] += ((2 * miu_g + kappa_g) * phi[j, i] / (dy * dy *
@@ -1615,24 +1659,33 @@ for step in range(n_main_steps):
             vg_pos_in_active = vg_pos_map[j, i]                          # Position in the active list.
             if vg_pos_in_active >= 0:                                         # gas is also active at interface (j + 1/2, i).
                 vg_idx = vg_start_id + vg_pos_in_active                  # Position in the reduced system.
-                A_reduced[eq_idx_water_y, vg_idx] -= k_hat                            # k_hat * v_g_(j + 1/2, i)^(k + 1)
+                addA(rows, cols, data, eq_idx_water_y, vg_idx, -k_hat)                            # k_hat * v_g_(j + 1/2, i)^(k + 1)
+                #A_reduced[eq_idx_water_y, vg_idx] -= k_hat                            # k_hat * v_g_(j + 1/2, i)^(k + 1)
 
-            A_reduced[eq_idx_water_y, vw_idx] += k_hat + k_hat_w          # (k_hat + k_hat_w) * v_w_(j + 1/2, i)^(k + 1)
+            addA(rows, cols, data, eq_idx_water_y, vw_idx, k_hat + k_hat_w)          # (k_hat + k_hat_w) * v_w_(j + 1/2, i)^(k + 1)
+            #A_reduced[eq_idx_water_y, vw_idx] += k_hat + k_hat_w          # (k_hat + k_hat_w) * v_w_(j + 1/2, i)^(k + 1)
 
             # Time-derivative term:                             (m_(j + 1/2, i)^(k + 1) / dt) * v_w_(j + 1/2, i)^(k + 1)
-            A_reduced[eq_idx_water_y, vw_idx] += m_upwind / dt_step
+            addA(rows, cols, data, eq_idx_water_y, vw_idx, m_upwind / dt_step)
+            #A_reduced[eq_idx_water_y, vw_idx] += m_upwind / dt_step
 
             # Convection terms (LHS of A9 second equation) - only when the water phase is present.
             # Coefficient for v_w(j + 1/2, i)^(k + 1)
             # The first term at dy parenthesis * v_w(j + 1/2, i)^(k + 1)
-            A_reduced[eq_idx_water_y, vw_idx] += (((phi[j + 1, i] * m_list[k_next, j + 1, i]) *
+            addA(rows, cols, data, eq_idx_water_y, vw_idx, (((phi[j + 1, i] * m_list[k_next, j + 1, i]) *
                                                    (v_w_list[k, j + 1, i] + v_w_list[k, j + 2, i])) /
-                                                  (2 * (d_y[j] + d_y[j + 1]) * min(phi[j, i], phi[j + 1, i])))
+                                                  (2 * (d_y[j] + d_y[j + 1]) * min(phi[j, i], phi[j + 1, i]))))
+            #A_reduced[eq_idx_water_y, vw_idx] += (((phi[j + 1, i] * m_list[k_next, j + 1, i]) *
+                                                   #(v_w_list[k, j + 1, i] + v_w_list[k, j + 2, i])) /
+                                                  #(2 * (d_y[j] + d_y[j + 1]) * min(phi[j, i], phi[j + 1, i])))
 
             # The second term at dy parenthesis * v_w(j + 1/2, i)^(k + 1)
-            A_reduced[eq_idx_water_y, vw_idx] -= (phi[j, i] * m_list[k_next, j, i] *
+            addA(rows, cols, data, eq_idx_water_y, vw_idx, -((phi[j, i] * m_list[k_next, j, i] *
                                                   (v_w_list[k, j, i] + v_w_list[k, j + 1, i]) /
-                                                  (2 * (d_y[j] + d_y[j + 1]) * min(phi[j, i], phi[j + 1, i])))
+                                                  (2 * (d_y[j] + d_y[j + 1]) * min(phi[j, i], phi[j + 1, i])))))
+            #A_reduced[eq_idx_water_y, vw_idx] -= (phi[j, i] * m_list[k_next, j, i] *
+                                                  #(v_w_list[k, j, i] + v_w_list[k, j + 1, i]) /
+                                                  #(2 * (d_y[j] + d_y[j + 1]) * min(phi[j, i], phi[j + 1, i])))
 
             # The first term at dx parenthesis * v_w(j + 1/2, i)^(k + 1)
             if i < N_x - 1:
@@ -1641,9 +1694,12 @@ for step in range(n_main_steps):
                                                            m_list[k_next, j, i + 1], m_list[k_next, j + 1, i + 1],
                                                            v_w_list[k, j + 1, i], v_w_list[k, j + 1, i + 1],
                                                            direction = 'vertical')
-                A_reduced[eq_idx_water_y, vw_idx] += (phi_m_upwind_average * (u_w_list[k, j, i + 1] +
+                addA(rows, cols, data, eq_idx_water_y, vw_idx, (phi_m_upwind_average * (u_w_list[k, j, i + 1] +
                                                                               u_w_list[k, j + 1, i + 1]) /
-                                                      (4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))
+                                                      (4 * d_x[i] * min(phi[j, i], phi[j + 1, i]))))
+                #A_reduced[eq_idx_water_y, vw_idx] += (phi_m_upwind_average * (u_w_list[k, j, i + 1] +
+                                                                              #u_w_list[k, j + 1, i + 1]) /
+                                                      #(4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))
 
             else:
                 # When we are at the rightmost column, we assume there are a ghost column next to it, where m = 0,
@@ -1652,9 +1708,12 @@ for step in range(n_main_steps):
                                                            m_list[k_next, j, i], m_list[k_next, j + 1, i],
                                                            0, 0, v_w_list[k, j + 1, i], 0,
                                                            direction = 'vertical')
-                A_reduced[eq_idx_water_y, vw_idx] += (phi_m_upwind_average * (u_w_list[k, j, i + 1] +
+                addA(rows, cols, data, eq_idx_water_y, vw_idx, (phi_m_upwind_average * (u_w_list[k, j, i + 1] +
                                                                               u_w_list[k, j + 1, i + 1]) /
-                                                      (4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))
+                                                      (4 * d_x[i] * min(phi[j, i], phi[j + 1, i]))))
+                #A_reduced[eq_idx_water_y, vw_idx] += (phi_m_upwind_average * (u_w_list[k, j, i + 1] +
+                                                                              #u_w_list[k, j + 1, i + 1]) /
+                                                      #(4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))
 
             # The second term at dx parenthesis * v_w(j + 1/2, i)^(k + 1)
             if i > 0:
@@ -1663,9 +1722,12 @@ for step in range(n_main_steps):
                                                            m_list[k_next, j, i], m_list[k_next, j + 1, i],
                                                            v_w_list[k, j + 1, i - 1], v_w_list[k, j + 1, i],
                                                            direction = 'vertical')
-                A_reduced[eq_idx_water_y, vw_idx] -= (phi_m_upwind_average * (u_w_list[k, j, i] +
+                addA(rows, cols, data, eq_idx_water_y, vw_idx, -((phi_m_upwind_average * (u_w_list[k, j, i] +
                                                                               u_w_list[k, j + 1, i]) /
-                                                      (4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))
+                                                      (4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))))
+                #A_reduced[eq_idx_water_y, vw_idx] -= (phi_m_upwind_average * (u_w_list[k, j, i] +
+                                                                              #u_w_list[k, j + 1, i]) /
+                                                      #(4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))
 
             else:
                 # When we are at the leftmost column, we assume there are a ghost column next to it, where m = 0,
@@ -1674,36 +1736,51 @@ for step in range(n_main_steps):
                                                            0, 0, m_list[k_next, j, i],
                                                            m_list[k_next, j + 1, i], 0, v_w_list[k, j + 1, i],
                                                            direction = 'vertical')
-                A_reduced[eq_idx_water_y, vw_idx] -= (phi_m_upwind_average * (u_w_list[k, j, i] +
+                addA(rows, cols, data, eq_idx_water_y, vw_idx, -((phi_m_upwind_average * (u_w_list[k, j, i] +
                                                                               u_w_list[k, j + 1, i]) /
-                                                      (4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))
+                                                      (4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))))
+                #A_reduced[eq_idx_water_y, vw_idx] -= (phi_m_upwind_average * (u_w_list[k, j, i] +
+                                                                              #u_w_list[k, j + 1, i]) /
+                                                      #(4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))
 
             # Coefficient for v_w(j + 3/2, i)^(k + 1) - only if that interface is also active.
             if j < N_y - 2:
                 vw_next_pos = vw_pos_map[j + 1, i]                            # Position in the active list.
                 if vw_next_pos >= 0:                                          # Check if (j + 1, i) interface is active.
                     vw_next_idx = vw_start_id + vw_next_pos                   # Position in the reduced system.
-                    A_reduced[eq_idx_water_y, vw_next_idx] += (phi[j + 1, i] * m_list[k_next, j + 1, i] *
+                    addA(rows, cols, data, eq_idx_water_y, vw_next_idx, (phi[j + 1, i] * m_list[k_next, j + 1, i] *
                                                                (v_w_list[k, j + 1, i] + v_w_list[k, j + 2, i]) /
                                                                (2 * (d_y[j] + d_y[j + 1]) *
-                                                                min(phi[j, i], phi[j + 1, i])))
+                                                                min(phi[j, i], phi[j + 1, i]))))
+                    #A_reduced[eq_idx_water_y, vw_next_idx] += (phi[j + 1, i] * m_list[k_next, j + 1, i] *
+                                                               #(v_w_list[k, j + 1, i] + v_w_list[k, j + 2, i]) /
+                                                               #(2 * (d_y[j] + d_y[j + 1]) *
+                                                                #min(phi[j, i], phi[j + 1, i])))
 
             elif j == N_y - 2:      # When we are at the j = N_y - 2 row, the velocity of the next interface equals to
                                     # velocity of this interface, So will write it for this interface.
-                A_reduced[eq_idx_water_y, vw_idx] += (phi[j + 1, i] * m_list[k_next, j + 1, i] *
+                addA(rows, cols, data, eq_idx_water_y, vw_idx, (phi[j + 1, i] * m_list[k_next, j + 1, i] *
                                                                (v_w_list[k, j + 1, i] + v_w_list[k, j + 2, i]) /
                                                                (2 * (d_y[j] + d_y[j + 1]) *
-                                                                min(phi[j, i], phi[j + 1, i])))
+                                                                min(phi[j, i], phi[j + 1, i]))))
+                #A_reduced[eq_idx_water_y, vw_idx] += (phi[j + 1, i] * m_list[k_next, j + 1, i] *
+                                                               #(v_w_list[k, j + 1, i] + v_w_list[k, j + 2, i]) /
+                                                               #(2 * (d_y[j] + d_y[j + 1]) *
+                                                                #min(phi[j, i], phi[j + 1, i])))
 
             # Coefficient for v_w(j - 1/2, i)^(k + 1) - only if that interface is also active.
             if j > 0:
                 vw_prev_pos = vw_pos_map[j - 1, i]                            # Position in the active list.
                 if vw_prev_pos >= 0:                                          # Check if (j - 1, i) interface is active.
                     vw_prev_idx = vw_start_id + vw_prev_pos                   # Position in the reduced system.
-                    A_reduced[eq_idx_water_y, vw_prev_idx] -= (phi[j, i] * m_list[k_next, j, i] *
+                    addA(rows, cols, data, eq_idx_water_y, vw_prev_idx, -((phi[j, i] * m_list[k_next, j, i] *
                                                                (v_w_list[k, j, i] + v_w_list[k, j + 1, i]) /
                                                                (2 * (d_y[j] + d_y[j + 1]) *
-                                                                min(phi[j, i], phi[j + 1, i])))
+                                                                min(phi[j, i], phi[j + 1, i])))))
+                    #A_reduced[eq_idx_water_y, vw_prev_idx] -= (phi[j, i] * m_list[k_next, j, i] *
+                                                               #(v_w_list[k, j, i] + v_w_list[k, j + 1, i]) /
+                                                               #(2 * (d_y[j] + d_y[j + 1]) *
+                                                                #min(phi[j, i], phi[j + 1, i])))
 
             # With j = 0, the previous interface is the top, and we know its water velocity is zero.
 
@@ -1717,9 +1794,12 @@ for step in range(n_main_steps):
                                                                m_list[k_next, j + 1, i], m_list[k_next, j, i + 1],
                                                                m_list[k_next, j + 1, i + 1], v_w_list[k, j + 1, i],
                                                                v_w_list[k, j + 1, i + 1], direction = 'vertical')
-                    A_reduced[eq_idx_water_y, vw_next_idx] += (phi_m_upwind_average * (u_w_list[k, j, i + 1] +
+                    addA(rows, cols, data, eq_idx_water_y, vw_next_idx, (phi_m_upwind_average * (u_w_list[k, j, i + 1] +
                                                                                        u_w_list[k, j + 1, i + 1]) /
-                                                               (4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))
+                                                               (4 * d_x[i] * min(phi[j, i], phi[j + 1, i]))))
+                    #A_reduced[eq_idx_water_y, vw_next_idx] += (phi_m_upwind_average * (u_w_list[k, j, i + 1] +
+                                                                                       #u_w_list[k, j + 1, i + 1]) /
+                                                               #(4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))
 
             # Coefficient for v_w(j + 1/2, i - 1)^(k + 1) - only if that interface is also active.
             if i > 0:
@@ -1731,14 +1811,18 @@ for step in range(n_main_steps):
                                                                m_list[k_next, j + 1, i - 1], m_list[k_next, j, i],
                                                                m_list[k_next, j + 1, i], v_w_list[k, j + 1, i - 1],
                                                                v_w_list[k, j + 1, i], direction = 'vertical')
-                    A_reduced[eq_idx_water_y, vw_prev_idx] -= (phi_m_upwind_average * (u_w_list[k, j, i] +
+                    addA(rows, cols, data, eq_idx_water_y, vw_prev_idx, -((phi_m_upwind_average * (u_w_list[k, j, i] +
                                                                                        u_w_list[k, j + 1, i]) /
-                                                               (4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))
+                                                               (4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))))
+                    #A_reduced[eq_idx_water_y, vw_prev_idx] -= (phi_m_upwind_average * (u_w_list[k, j, i] +
+                                                                                       #u_w_list[k, j + 1, i]) /
+                                                               #(4 * d_x[i] * min(phi[j, i], phi[j + 1, i])))
 
             # Pressure gradient terms (LHS of A9 second equation)
             # Coefficient for P_w(j + 1, i)^(k + 1)
             if j + 1 < N_y - 1:                                                                  # Row j + 1 is unknown.
-                A_reduced[eq_idx_water_y, var_idx + N_x] += 2 * S_w_interface / (d_y[j] + d_y[j + 1])
+                addA(rows, cols, data, eq_idx_water_y, var_idx + N_x, 2 * S_w_interface / (d_y[j] + d_y[j + 1]))
+                #A_reduced[eq_idx_water_y, var_idx + N_x] += 2 * S_w_interface / (d_y[j] + d_y[j + 1])
 
             else:                                                 # Row j + 1 is a boundary condition. (j + 1 = N_y - 1)
                 # We know the last row is full of gas so s_w = 0
@@ -1746,7 +1830,8 @@ for step in range(n_main_steps):
                 b_reduced[eq_idx_water_y] -= 2 * S_w_interface * P_w_bound / (d_y[j] + d_y[j + 1])
 
             # Coefficient for P_w(j, i)^(k + 1)
-            A_reduced[eq_idx_water_y, var_idx] -= 2 * S_w_interface / (d_y[j] + d_y[j + 1])
+            addA(rows, cols, data, eq_idx_water_y, var_idx, -(2 * S_w_interface / (d_y[j] + d_y[j + 1])))
+            #A_reduced[eq_idx_water_y, var_idx] -= 2 * S_w_interface / (d_y[j] + d_y[j + 1])
 
             # Gravity term (RHS of A9 second equation)
             b_reduced[eq_idx_water_y] += m_upwind * g
@@ -1763,22 +1848,27 @@ for step in range(n_main_steps):
                     phi_1 = min(phi[j, i], phi[j + 1, i])
                     phi_2 = min(phi[j, i + 1], phi[j + 1, i + 1])
                     phi_ave = min(phi_1, phi_2)
-                    A_reduced[eq_idx_water_y, vw_next_idx] -= 2 * (phi_ave * miu_w / (d_x[i] * (d_x[i] + d_x[i + 1]) *
-                                                               min(phi[j, i], phi[j + 1, i])))
+                    addA(rows, cols, data, eq_idx_water_y, vw_next_idx, -(2 * (phi_ave * miu_w / (d_x[i] * (d_x[i] + d_x[i + 1]) *
+                                                               min(phi[j, i], phi[j + 1, i])))))
+                    #A_reduced[eq_idx_water_y, vw_next_idx] -= 2 * (phi_ave * miu_w / (d_x[i] * (d_x[i] + d_x[i + 1]) *
+                                                               #min(phi[j, i], phi[j + 1, i])))
 
             # Coefficient for v_w(j + 1/2, i)^(k + 1) at the first dx parenthesis.
             if i < N_x - 1:
                 phi_1 = min(phi[j, i], phi[j + 1, i])
                 phi_2 = min(phi[j, i + 1], phi[j + 1, i + 1])
                 phi_ave = min(phi_1, phi_2)
-                A_reduced[eq_idx_water_y, vw_idx] += 2 * (phi_ave * miu_w / (d_x[i] * (d_x[i] + d_x[i + 1]) *
-                                                      min(phi[j, i], phi[j + 1, i])))
+                addA(rows, cols, data, eq_idx_water_y, vw_idx, 2 * (phi_ave * miu_w / (d_x[i] * (d_x[i] + d_x[i + 1]) *
+                                                      min(phi[j, i], phi[j + 1, i]))))
+                #A_reduced[eq_idx_water_y, vw_idx] += 2 * (phi_ave * miu_w / (d_x[i] * (d_x[i] + d_x[i + 1]) *
+                                                      #min(phi[j, i], phi[j + 1, i])))
 
             elif i == N_x - 1:                                                   # RIGHT WALL DRAG (No-Slip: v_wall = 0)
                 # Use internal porosity to ensure term is non-zero.
                 phi_internal = min(phi[j, i], phi[j + 1, i])
                 # Add 2*mu/dx^2 drag to diagonal.
-                A_reduced[eq_idx_water_y, vw_idx] += (phi_internal * 2.0 * miu_w / (d_x[i] * d_x[i] * phi_internal))
+                addA(rows, cols, data, eq_idx_water_y, vw_idx, (phi_internal * 2.0 * miu_w / (d_x[i] * d_x[i] * phi_internal)))
+                #A_reduced[eq_idx_water_y, vw_idx] += (phi_internal * 2.0 * miu_w / (d_x[i] * d_x[i] * phi_internal))
                 # When we are at the rightmost column, the velocity on the wall is zero.
 
             # Coefficient for u_w(j + 1, i + 1/2)^k at the first dx parenthesis.
@@ -1804,14 +1894,17 @@ for step in range(n_main_steps):
                 phi_1 = min(phi[j, i - 1], phi[j + 1, i - 1])
                 phi_2 = min(phi[j, i], phi[j + 1, i])
                 phi_ave = min(phi_1, phi_2)
-                A_reduced[eq_idx_water_y, vw_idx] += 2 * (phi_ave * miu_w / (d_x[i] * (d_x[i] + d_x[i - 1]) *
-                                                      min(phi[j, i], phi[j + 1, i])))
+                addA(rows, cols, data, eq_idx_water_y, vw_idx, 2 * (phi_ave * miu_w / (d_x[i] * (d_x[i] + d_x[i - 1]) *
+                                                      min(phi[j, i], phi[j + 1, i]))))
+                #A_reduced[eq_idx_water_y, vw_idx] += 2 * (phi_ave * miu_w / (d_x[i] * (d_x[i] + d_x[i - 1]) *
+                                                      #min(phi[j, i], phi[j + 1, i])))
 
             elif i == 0:                                                          # LEFT WALL DRAG (No-Slip: v_wall = 0)
                 # Use internal porosity to ensure term is non-zero.
                 phi_internal = min(phi[j, i], phi[j + 1, i])
                 # Add 2*mu/dx^2 drag to diagonal
-                A_reduced[eq_idx_water_y, vw_idx] += (phi_internal * 2.0 * miu_w / (d_x[i] * d_x[i] * phi_internal))
+                addA(rows, cols, data, eq_idx_water_y, vw_idx, (phi_internal * 2.0 * miu_w / (d_x[i] * d_x[i] * phi_internal)))
+                #A_reduced[eq_idx_water_y, vw_idx] += (phi_internal * 2.0 * miu_w / (d_x[i] * d_x[i] * phi_internal))
                 # When we at the leftmost column, the velocity on the wall is zero.
 
             # Coefficient for v_w(j + 1/2, i - 1)^(k + 1) at second dx parenthesis - only if that interface is active.
@@ -1822,8 +1915,10 @@ for step in range(n_main_steps):
                     phi_1 = min(phi[j, i - 1], phi[j + 1, i - 1])
                     phi_2 = min(phi[j, i], phi[j + 1, i])
                     phi_ave = min(phi_1, phi_2)
-                    A_reduced[eq_idx_water_y, vw_prev_idx] -= 2 * (phi_ave * miu_w / (d_x[i] * (d_x[i] + d_x[i - 1]) *
-                                                               min(phi[j, i], phi[j + 1, i])))
+                    addA(rows, cols, data, eq_idx_water_y, vw_prev_idx, -(2 * (phi_ave * miu_w / (d_x[i] * (d_x[i] + d_x[i - 1]) *
+                                                               min(phi[j, i], phi[j + 1, i])))))
+                    #A_reduced[eq_idx_water_y, vw_prev_idx] -= 2 * (phi_ave * miu_w / (d_x[i] * (d_x[i] + d_x[i - 1]) *
+                                                               #min(phi[j, i], phi[j + 1, i])))
 
             # Coefficient for u_w(j + 1, i - 1/2)^k at the second dx parenthesis.
             if i > 0:
@@ -1847,20 +1942,29 @@ for step in range(n_main_steps):
                 vw_next_pos = vw_pos_map[j + 1, i]                        # Position in the active list.
                 if vw_next_pos >= 0:                                      # Check if the (j + 1, i) interface is active.
                     vw_next_idx = vw_start_id + vw_next_pos               # Position in the reduced system.
-                    A_reduced[eq_idx_water_y, vw_next_idx] -= 2 * ((2 * miu_w + kappa_w) * phi[j + 1, i] /
+                    addA(rows, cols, data, eq_idx_water_y, vw_next_idx, -(2 * ((2 * miu_w + kappa_w) * phi[j + 1, i] /
                                                                ((d_y[j] + d_y[j + 1]) * d_y[j + 1] *
-                                                               min(phi[j, i], phi[j + 1, i])))
+                                                               min(phi[j, i], phi[j + 1, i])))))
+                    #A_reduced[eq_idx_water_y, vw_next_idx] -= 2 * ((2 * miu_w + kappa_w) * phi[j + 1, i] /
+                                                               #((d_y[j] + d_y[j + 1]) * d_y[j + 1] *
+                                                               #min(phi[j, i], phi[j + 1, i])))
 
             elif j == N_y - 2:  # When we are at the j = N_y - 2 row, the velocity of the next interface equals to the
                 # velocity of this interface, So we will write it for this interface.
-                A_reduced[eq_idx_water_y, vw_idx] -= 2 * ((2 * miu_w + kappa_w) * phi[j + 1, i] /
+                addA(rows, cols, data, eq_idx_water_y, vw_idx, -(2 * ((2 * miu_w + kappa_w) * phi[j + 1, i] /
                                                       ((d_y[j] + d_y[j + 1]) * d_y[j + 1] *
-                                                      min(phi[j, i], phi[j + 1, i])))
+                                                      min(phi[j, i], phi[j + 1, i])))))
+                #A_reduced[eq_idx_water_y, vw_idx] -= 2 * ((2 * miu_w + kappa_w) * phi[j + 1, i] /
+                                                      #((d_y[j] + d_y[j + 1]) * d_y[j + 1] *
+                                                      #min(phi[j, i], phi[j + 1, i])))
 
             # Coefficient for v_w(j + 1/2, i)^(k + 1) at the first dy parenthesis.
-            A_reduced[eq_idx_water_y, vw_idx] += 2 * ((2 * miu_w + kappa_w) * phi[j + 1, i] /
+            addA(rows, cols, data, eq_idx_water_y, vw_idx, 2 * ((2 * miu_w + kappa_w) * phi[j + 1, i] /
                                                   ((d_y[j] + d_y[j + 1]) * d_y[j + 1] *
-                                                  min(phi[j, i], phi[j + 1, i])))
+                                                  min(phi[j, i], phi[j + 1, i]))))
+            #A_reduced[eq_idx_water_y, vw_idx] += 2 * ((2 * miu_w + kappa_w) * phi[j + 1, i] /
+                                                  #((d_y[j] + d_y[j + 1]) * d_y[j + 1] *
+                                                  #min(phi[j, i], phi[j + 1, i])))
 
             # Coefficient for u_w(j + 1, i + 1/2)^k at the first dy parenthesis.
             if i < N_x - 1:
@@ -1879,17 +1983,22 @@ for step in range(n_main_steps):
                 # When we are at the leftmost column, the velocity on the wall is zero.
 
             # Coefficient for v_w(j + 1/2, i)^(k + 1) at the second dy parenthesis.
-            A_reduced[eq_idx_water_y, vw_idx] += 2 * ((2 * miu_w + kappa_w) * phi[j, i] / ((d_y[j] + d_y[j + 1]) * d_y[j] *
-                                                  min(phi[j, i], phi[j + 1, i])))
+            addA(rows, cols, data, eq_idx_water_y, vw_idx, 2 * ((2 * miu_w + kappa_w) * phi[j, i] / ((d_y[j] + d_y[j + 1]) * d_y[j] *
+                                                  min(phi[j, i], phi[j + 1, i]))))
+            #A_reduced[eq_idx_water_y, vw_idx] += 2 * ((2 * miu_w + kappa_w) * phi[j, i] / ((d_y[j] + d_y[j + 1]) * d_y[j] *
+                                                  #min(phi[j, i], phi[j + 1, i])))
 
             # Coefficient for v_w(j - 1/2, i)^(k + 1) at the second dy parenthesis - only if that interface is active.
             if j > 0:
                 vw_prev_pos = vw_pos_map[j - 1, i]                        # Position in the active list.
                 if vw_prev_pos >= 0:                                      # Check if the (j - 1, i) interface is active.
                     vw_prev_idx = vw_start_id + vw_prev_pos               # Position in the reduced system.
-                    A_reduced[eq_idx_water_y, vw_prev_idx] -= 2 * ((2 * miu_w + kappa_w) * phi[j, i] /
+                    addA(rows, cols, data, eq_idx_water_y, vw_prev_idx, -(2 * ((2 * miu_w + kappa_w) * phi[j, i] /
                                                                    ((d_y[j] + d_y[j + 1]) * d_y[j] *
-                                                               min(phi[j, i], phi[j + 1, i])))
+                                                               min(phi[j, i], phi[j + 1, i])))))
+                    #A_reduced[eq_idx_water_y, vw_prev_idx] -= 2 * ((2 * miu_w + kappa_w) * phi[j, i] /
+                                                                   #((d_y[j] + d_y[j + 1]) * d_y[j] *
+                                                               #min(phi[j, i], phi[j + 1, i])))
 
             # With j = 0, the previous interface is the inlet, so its velocity (here j - 1) is zero.
 
@@ -1940,29 +2049,38 @@ for step in range(n_main_steps):
             uw_pos_in_active = uw_pos_map[j, i]                        # Position in the active list.
             if uw_pos_in_active >= 0:                                  # Water is also active at (j, i + 1/2) interface.
                 uw_idx = uw_start_id + uw_pos_in_active                # Position in the reduced system.
-                A_reduced[eq_idx_gas_x, uw_idx] -= k_hat                              # k_hat * u_w_(j, i + 1/2)^(k + 1)
+                addA(rows, cols, data, eq_idx_gas_x, uw_idx, -k_hat)                              # k_hat * u_w_(j, i + 1/2)^(k + 1)
+                #A_reduced[eq_idx_gas_x, uw_idx] -= k_hat                              # k_hat * u_w_(j, i + 1/2)^(k + 1)
 
-            A_reduced[eq_idx_gas_x, ug_idx] += k_hat + k_hat_g            # (k_hat + k_hat_g) * u_g_(j, i + 1/2)^(k + 1)
+            addA(rows, cols, data, eq_idx_gas_x, ug_idx, k_hat + k_hat_g)            # (k_hat + k_hat_g) * u_g_(j, i + 1/2)^(k + 1)
+            #A_reduced[eq_idx_gas_x, ug_idx] += k_hat + k_hat_g            # (k_hat + k_hat_g) * u_g_(j, i + 1/2)^(k + 1)
 
             # Time derivative term:                             (n_(j, i + 1/2)^(k + 1) / dt) * u_g_(j, i + 1/2)^(k + 1)
-            A_reduced[eq_idx_gas_x, ug_idx] += n_upwind / dt_step
+            addA(rows, cols, data, eq_idx_gas_x, ug_idx, n_upwind / dt_step)
+            #A_reduced[eq_idx_gas_x, ug_idx] += n_upwind / dt_step
 
             # Convection terms (LHS of A9 first equation) - only when the gas phase is present.
             # Coefficient for u_g_(j, i + 1/2)^(k + 1)
             # The first term at dx parenthesis * u_g_(j, i + 1/2)^(k + 1)
             if i < N_x - 1:                                                           # Check if i + 2 is within bounds.
-                A_reduced[eq_idx_gas_x, ug_idx] += (((phi[j, i + 1] * n_list[k_next, j, i + 1]) *
+                addA(rows, cols, data, eq_idx_gas_x, ug_idx, (((phi[j, i + 1] * n_list[k_next, j, i + 1]) *
                                                      (u_g_list[k, j, i + 1] + u_g_list[k, j, i + 2])) /
-                                                    (2 * (d_x[i] + d_x[i + 1]) * min(phi[j, i], phi[j, i + 1])))
+                                                    (2 * (d_x[i] + d_x[i + 1]) * min(phi[j, i], phi[j, i + 1]))))
+                #A_reduced[eq_idx_gas_x, ug_idx] += (((phi[j, i + 1] * n_list[k_next, j, i + 1]) *
+                                                     #(u_g_list[k, j, i + 1] + u_g_list[k, j, i + 2])) /
+                                                    #(2 * (d_x[i] + d_x[i + 1]) * min(phi[j, i], phi[j, i + 1])))
 
             # If i + 2 is out of bounds (we are at the rightmost column), its velocity and phi (j, i + 1) will be zero.
             # So we don't need to add anything to the A_reduced matrix.
 
             # The second term at dx parenthesis * u_g_(j, i + 1/2)^(k + 1)
             if i < N_x - 1:                                                           # Check if i + 1 is within bounds.
-                A_reduced[eq_idx_gas_x, ug_idx] -= (phi[j, i] * n_list[k_next, j, i] *
+                addA(rows, cols, data, eq_idx_gas_x, ug_idx, -((phi[j, i] * n_list[k_next, j, i] *
                                                     (u_g_list[k, j, i] + u_g_list[k, j, i + 1]) /
-                                                    (2 * (d_x[i] + d_x[i + 1]) * min(phi[j, i], phi[j, i + 1])))
+                                                    (2 * (d_x[i] + d_x[i + 1]) * min(phi[j, i], phi[j, i + 1])))))
+                #A_reduced[eq_idx_gas_x, ug_idx] -= (phi[j, i] * n_list[k_next, j, i] *
+                                                    #(u_g_list[k, j, i] + u_g_list[k, j, i + 1]) /
+                                                    #(2 * (d_x[i] + d_x[i + 1]) * min(phi[j, i], phi[j, i + 1])))
 
             # If i + 1 is out of bounds (we are at the rightmost column), phi (j, i + 1) will be zero.
             # So we don't need to add anything to the A_reduced matrix.
@@ -1974,9 +2092,12 @@ for step in range(n_main_steps):
                                                            n_list[k_next, j, i + 1], n_list[k_next, j + 1, i + 1],
                                                            u_g_list[k, j, i + 1], u_g_list[k, j + 1, i + 1],
                                                            direction = 'horizontal')
-                A_reduced[eq_idx_gas_x, ug_idx] += (phi_n_upwind_average * (v_g_list[k, j + 1, i] +
+                addA(rows, cols, data, eq_idx_gas_x, ug_idx, (phi_n_upwind_average * (v_g_list[k, j + 1, i] +
                                                                             v_g_list[k, j + 1, i + 1]) /
-                                                    (4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
+                                                    (4 * d_y[j] * min(phi[j, i], phi[j, i + 1]))))
+                #A_reduced[eq_idx_gas_x, ug_idx] += (phi_n_upwind_average * (v_g_list[k, j + 1, i] +
+                                                                            #v_g_list[k, j + 1, i + 1]) /
+                                                    #(4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
 
             # When we are at the rightmost column, we assume there are a ghost column next to it, where n = 0,
             # phi = 0, and velocity is zero. Since we use min for phi at interfaces, and phi of this ghost column is
@@ -1989,8 +2110,10 @@ for step in range(n_main_steps):
                                                            n_list[k_next, j - 1, i + 1], n_list[k_next, j, i + 1],
                                                            u_g_list[k, j - 1, i + 1], u_g_list[k, j, i + 1],
                                                            direction = 'horizontal')
-                A_reduced[eq_idx_gas_x, ug_idx] -= (phi_n_upwind_average * (v_g_list[k, j, i] + v_g_list[k, j, i + 1])
-                                                    / (4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
+                addA(rows, cols, data, eq_idx_gas_x, ug_idx, -((phi_n_upwind_average * (v_g_list[k, j, i] + v_g_list[k, j, i + 1])
+                                                    / (4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))))
+                #A_reduced[eq_idx_gas_x, ug_idx] -= (phi_n_upwind_average * (v_g_list[k, j, i] + v_g_list[k, j, i + 1])
+                                                    #/ (4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
 
             #elif j == 0 and i < N_x - 1:
             #When we are at the top row, horizontal velocity is zero, so we don't need to add anything the next comment is old.
@@ -2013,20 +2136,28 @@ for step in range(n_main_steps):
                 ug_next_pos = ug_pos_map[j, i + 1]                        # Position in the active list.
                 if ug_next_pos >= 0:                                      # Check if the (j, i + 1) interface is active.
                     ug_next_idx = ug_start_id + ug_next_pos               # Position in the reduced system.
-                    A_reduced[eq_idx_gas_x, ug_next_idx] += (phi[j, i + 1] * n_list[k_next, j, i + 1] *
+                    addA(rows, cols, data, eq_idx_gas_x, ug_next_idx, (phi[j, i + 1] * n_list[k_next, j, i + 1] *
                                                              (u_g_list[k, j, i + 1] + u_g_list[k, j, i + 2]) /
                                                              (2 * (d_x[i] + d_x[i + 1]) *
-                                                              min(phi[j, i], phi[j, i + 1])))
+                                                              min(phi[j, i], phi[j, i + 1]))))
+                    #A_reduced[eq_idx_gas_x, ug_next_idx] += (phi[j, i + 1] * n_list[k_next, j, i + 1] *
+                                                             #(u_g_list[k, j, i + 1] + u_g_list[k, j, i + 2]) /
+                                                             #(2 * (d_x[i] + d_x[i + 1]) *
+                                                              #min(phi[j, i], phi[j, i + 1])))
 
             # Coefficient for u_g_(j, i - 1/2)^(k + 1) - only if that interface is also active.
             if 0 < i < N_x - 1:
                 ug_prev_pos = ug_pos_map[j, i - 1]                        # Position in the active list.
                 if ug_prev_pos >= 0:                                      # Check if the (j, i - 1) interface is active.
                     ug_prev_idx = ug_start_id + ug_prev_pos               # Position in the reduced system.
-                    A_reduced[eq_idx_gas_x, ug_prev_idx] -= (phi[j, i] * n_list[k_next, j, i] *
+                    addA(rows, cols, data, eq_idx_gas_x, ug_prev_idx, -((phi[j, i] * n_list[k_next, j, i] *
                                                              (u_g_list[k, j, i] + u_g_list[k, j, i + 1]) /
                                                              (2 * (d_x[i] + d_x[i + 1]) *
-                                                              min(phi[j, i], phi[j, i + 1])))
+                                                              min(phi[j, i], phi[j, i + 1])))))
+                    #A_reduced[eq_idx_gas_x, ug_prev_idx] -= (phi[j, i] * n_list[k_next, j, i] *
+                                                             #(u_g_list[k, j, i] + u_g_list[k, j, i + 1]) /
+                                                             #(2 * (d_x[i] + d_x[i + 1]) *
+                                                              #min(phi[j, i], phi[j, i + 1])))
 
             # Coefficient for u_g_(j + 1, i + 1/2)^(k + 1) - only if that interface is also active.
             if j < N_y - 2 and i < N_x - 1:
@@ -2038,9 +2169,12 @@ for step in range(n_main_steps):
                                                                n_list[k_next, j + 1, i], n_list[k_next, j, i + 1],
                                                                n_list[k_next, j + 1, i + 1], u_g_list[k, j, i + 1],
                                                                u_g_list[k, j + 1, i + 1], direction = 'horizontal')
-                    A_reduced[eq_idx_gas_x, ug_next_idx] += (phi_n_upwind_average * (v_g_list[k, j + 1, i] +
+                    addA(rows, cols, data, eq_idx_gas_x, ug_next_idx, (phi_n_upwind_average * (v_g_list[k, j + 1, i] +
                                                                                 v_g_list[k, j + 1, i + 1]) /
-                                                        (4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
+                                                        (4 * d_y[j] * min(phi[j, i], phi[j, i + 1]))))
+                    #A_reduced[eq_idx_gas_x, ug_next_idx] += (phi_n_upwind_average * (v_g_list[k, j + 1, i] +
+                                                                                #v_g_list[k, j + 1, i + 1]) /
+                                                        #(4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
 
             elif j == N_y - 2 and i < N_x - 1:
                 phi_n_upwind_average = upwind_then_average(phi[j, i], phi[j + 1, i], phi[j, i + 1], phi[j + 1, i + 1],
@@ -2048,9 +2182,12 @@ for step in range(n_main_steps):
                                                            n_list[k_next, j, i + 1], n_list[k_next, j + 1, i + 1],
                                                            u_g_list[k, j, i + 1], u_g_list[k, j + 1, i + 1],
                                                            direction ='horizontal')
-                A_reduced[eq_idx_gas_x, ug_idx] += (phi_n_upwind_average * (v_g_list[k, j + 1, i] +
+                addA(rows, cols, data, eq_idx_gas_x, ug_idx, (phi_n_upwind_average * (v_g_list[k, j + 1, i] +
                                                                                 v_g_list[k, j + 1, i + 1]) /
-                                                        (4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
+                                                        (4 * d_y[j] * min(phi[j, i], phi[j, i + 1]))))
+                #A_reduced[eq_idx_gas_x, ug_idx] += (phi_n_upwind_average * (v_g_list[k, j + 1, i] +
+                                                                                #v_g_list[k, j + 1, i + 1]) /
+                                                        #(4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
 
                 # When we are at the j = N_y - 2 row, the velocity of the next interface equals to
                 # velocity of this interface, So will write it for this interface.
@@ -2069,9 +2206,12 @@ for step in range(n_main_steps):
                                                                n_list[k_next, j, i], n_list[k_next, j - 1, i + 1],
                                                                n_list[k_next, j, i + 1], u_g_list[k, j - 1, i + 1],
                                                                u_g_list[k, j, i + 1], direction = 'horizontal')
-                    A_reduced[eq_idx_gas_x, ug_prev_idx] -= (phi_n_upwind_average * (v_g_list[k, j, i] +
+                    addA(rows, cols, data, eq_idx_gas_x, ug_prev_idx, -((phi_n_upwind_average * (v_g_list[k, j, i] +
                                                                                      v_g_list[k, j, i + 1]) /
-                                                             (4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
+                                                             (4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))))
+                    #A_reduced[eq_idx_gas_x, ug_prev_idx] -= (phi_n_upwind_average * (v_g_list[k, j, i] +
+                                                                                     #v_g_list[k, j, i + 1]) /
+                                                             #(4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
 
             # When we are at the bottom row, we assume there are a ghost row below that, where n = rho_g_in, phi = 1,
             # and u_g is 0. (Full of gas, and inlet velocity is upward)
@@ -2080,12 +2220,14 @@ for step in range(n_main_steps):
             # Pressure gradient terms (LHS of A9 first equation)
             # Coefficient for P_w(j, i + 1)^(k + 1)
             if i + 1 < N_x:                                                             # Column i + 1 is within bounds.
-                A_reduced[eq_idx_gas_x, var_idx + 1] += 2 * S_g_interface / (d_x[i] + d_x[i + 1])
+                addA(rows, cols, data, eq_idx_gas_x, var_idx + 1, 2 * S_g_interface / (d_x[i] + d_x[i + 1]))
+                #A_reduced[eq_idx_gas_x, var_idx + 1] += 2 * S_g_interface / (d_x[i] + d_x[i + 1])
 
             # If i + 1 is out of bounds (we are at the rightmost column), the pressure gradient term will be zero.
 
             # Coefficient for P_w(j, i)^(k + 1)
-            A_reduced[eq_idx_gas_x, var_idx] -= 2 * S_g_interface / (d_x[i] + d_x[i + 1])
+            addA(rows, cols, data, eq_idx_gas_x, var_idx, -(2 * S_g_interface / (d_x[i] + d_x[i + 1])))
+            #A_reduced[eq_idx_gas_x, var_idx] -= 2 * S_g_interface / (d_x[i] + d_x[i + 1])
 
             # Capillary pressure terms (RHS of A9 first equation)
             # Coefficient for P_c_(j, i + 1)^(k + 1)
@@ -2109,15 +2251,19 @@ for step in range(n_main_steps):
                     phi_1 = min(phi[j, i], phi[j, i + 1])
                     phi_2 = min(phi[j + 1, i], phi[j + 1, i + 1])
                     phi_ave = min(phi_1, phi_2)
-                    A_reduced[eq_idx_gas_x, ug_next_idx] -= 2 * (phi_ave * miu_g / (d_y[j] * (d_y[j] + d_y[j + 1]) *
-                                                             min(phi[j, i], phi[j, i + 1])))
+                    addA(rows, cols, data, eq_idx_gas_x, ug_next_idx, -(2 * (phi_ave * miu_g / (d_y[j] * (d_y[j] + d_y[j + 1]) *
+                                                             min(phi[j, i], phi[j, i + 1])))))
+                    #A_reduced[eq_idx_gas_x, ug_next_idx] -= 2 * (phi_ave * miu_g / (d_y[j] * (d_y[j] + d_y[j + 1]) *
+                                                             #min(phi[j, i], phi[j, i + 1])))
 
             elif j == N_y - 2 and i < N_x - 1:
                 phi_1 = min(phi[j, i], phi[j, i + 1])
                 phi_2 = min(phi[j + 1, i], phi[j + 1, i + 1])
                 phi_ave = min(phi_1, phi_2)
-                A_reduced[eq_idx_gas_x, ug_idx] -= 2 * (phi_ave * miu_g / (d_y[j] * (d_y[j] + d_y[j + 1]) *
-                                                             min(phi[j, i], phi[j, i + 1])))
+                addA(rows, cols, data, eq_idx_gas_x, ug_idx, -(2 * (phi_ave * miu_g / (d_y[j] * (d_y[j] + d_y[j + 1]) *
+                                                             min(phi[j, i], phi[j, i + 1])))))
+                #A_reduced[eq_idx_gas_x, ug_idx] -= 2 * (phi_ave * miu_g / (d_y[j] * (d_y[j] + d_y[j + 1]) *
+                                                             #min(phi[j, i], phi[j, i + 1])))
 
                 # When we are at the j = N_y - 2 row, the velocity of the next interface equals to velocity of this
                 # interface, So will write it for this interface.
@@ -2127,8 +2273,10 @@ for step in range(n_main_steps):
                 phi_1 = min(phi[j, i], phi[j, i + 1])
                 phi_2 = min(phi[j + 1, i], phi[j + 1, i + 1])
                 phi_ave = min(phi_1, phi_2)
-                A_reduced[eq_idx_gas_x, ug_idx] += 2 * (phi_ave * miu_g / (d_y[j] * (d_y[j] + d_y[j + 1]) *
-                                                    min(phi[j, i], phi[j, i + 1])))
+                addA(rows, cols, data, eq_idx_gas_x, ug_idx, 2 * (phi_ave * miu_g / (d_y[j] * (d_y[j] + d_y[j + 1]) *
+                                                    min(phi[j, i], phi[j, i + 1]))))
+                #A_reduced[eq_idx_gas_x, ug_idx] += 2 * (phi_ave * miu_g / (d_y[j] * (d_y[j] + d_y[j + 1]) *
+                                                    #min(phi[j, i], phi[j, i + 1])))
 
             # When we are at the rightmost column, the velocity on the wall is zero.
 
@@ -2155,8 +2303,10 @@ for step in range(n_main_steps):
                 phi_1 = min(phi[j - 1, i], phi[j - 1, i + 1])
                 phi_2 = min(phi[j, i], phi[j, i + 1])
                 phi_ave = min(phi_1, phi_2)
-                A_reduced[eq_idx_gas_x, ug_idx] += 2 * (phi_ave * miu_g / (d_y[j] * (d_y[j] + d_y[j - 1]) *
-                                                    min(phi[j, i], phi[j, i + 1])))
+                addA(rows, cols, data, eq_idx_gas_x, ug_idx, 2 * (phi_ave * miu_g / (d_y[j] * (d_y[j] + d_y[j - 1]) *
+                                                    min(phi[j, i], phi[j, i + 1]))))
+                #A_reduced[eq_idx_gas_x, ug_idx] += 2 * (phi_ave * miu_g / (d_y[j] * (d_y[j] + d_y[j - 1]) *
+                                                    #min(phi[j, i], phi[j, i + 1])))
 
             #elif j == 0 and i < N_x - 1:
             # Since velocity at top row is 0. so we don't need to add anything and the next comment is old.
@@ -2178,8 +2328,10 @@ for step in range(n_main_steps):
                     phi_1 = min(phi[j - 1, i], phi[j - 1, i + 1])
                     phi_2 = min(phi[j, i], phi[j, i + 1])
                     phi_ave = min(phi_1, phi_2)
-                    A_reduced[eq_idx_gas_x, ug_prev_idx] -= 2 * (phi_ave * miu_g / (d_y[j] * (d_y[j] + d_y[j - 1]) *
-                                                             min(phi[j, i], phi[j, i + 1])))
+                    addA(rows, cols, data, eq_idx_gas_x, ug_prev_idx, -(2 * (phi_ave * miu_g / (d_y[j] * (d_y[j] + d_y[j - 1]) *
+                                                             min(phi[j, i], phi[j, i + 1])))))
+                    #A_reduced[eq_idx_gas_x, ug_prev_idx] -= 2 * (phi_ave * miu_g / (d_y[j] * (d_y[j] + d_y[j - 1]) *
+                                                             #min(phi[j, i], phi[j, i + 1])))
 
                 # When we are at the bottom row, we assume there are a ghost row below that, where n = rho_g_in, phi = 1,
                 # and u_g is 0. (Full of gas, and inlet velocity is upward)
@@ -2226,18 +2378,24 @@ for step in range(n_main_steps):
                 ug_next_pos = ug_pos_map[j, i + 1]                        # Position in the active list.
                 if ug_next_pos >= 0:                                      # Check if the (j, i + 1) interface is active.
                     ug_next_idx = ug_start_id + ug_next_pos               # Position in the reduced system.
-                    A_reduced[eq_idx_gas_x, ug_next_idx] -= 2 * ((2 * miu_g + kappa_g) * phi[j, i + 1] /
+                    addA(rows, cols, data, eq_idx_gas_x, ug_next_idx, -(2 * ((2 * miu_g + kappa_g) * phi[j, i + 1] /
                                                              ((d_x[i] + d_x[i + 1]) * d_x[i + 1] *
-                                                              min(phi[j, i], phi[j, i + 1])))
+                                                              min(phi[j, i], phi[j, i + 1])))))
+                    #A_reduced[eq_idx_gas_x, ug_next_idx] -= 2 * ((2 * miu_g + kappa_g) * phi[j, i + 1] /
+                                                             #((d_x[i] + d_x[i + 1]) * d_x[i + 1] *
+                                                              #min(phi[j, i], phi[j, i + 1])))
 
                 # When we are at the i = N_x - 2 column, the velocity of the next interface is velocity on the wall,
                 # which is zero. So we don't need to add anything to the A_reduced matrix.
 
             # Coefficient for u_g(j, i + 1/2)^(k + 1) at the first dx parenthesis.
             if i < N_x - 1:
-                A_reduced[eq_idx_gas_x, ug_idx] += 2 * ((2 * miu_g + kappa_g) * phi[j, i + 1] /
+                addA(rows, cols, data, eq_idx_gas_x, ug_idx, 2 * ((2 * miu_g + kappa_g) * phi[j, i + 1] /
                                                         ((d_x[i] + d_x[i + 1]) * d_x[i + 1] *
-                                                     min(phi[j, i], phi[j, i + 1])))
+                                                     min(phi[j, i], phi[j, i + 1]))))
+                #A_reduced[eq_idx_gas_x, ug_idx] += 2 * ((2 * miu_g + kappa_g) * phi[j, i + 1] /
+                                                        #((d_x[i] + d_x[i + 1]) * d_x[i + 1] *
+                                                     #min(phi[j, i], phi[j, i + 1])))
 
             # Coefficient for v_g(j + 1/2, i + 1)^k at the first dx parenthesis.
             if i < N_x - 1:
@@ -2257,17 +2415,22 @@ for step in range(n_main_steps):
 
             # Coefficient for u_g(j, i + 1/2)^(k + 1) at the second dx parenthesis.
             if i < N_x - 1:
-                A_reduced[eq_idx_gas_x, ug_idx] += 2 * ((2 * miu_g + kappa_g) * phi[j, i] / ((d_x[i] + d_x[i + 1]) * d_x[i] *
-                                                     min(phi[j, i], phi[j, i + 1])))
+                addA(rows, cols, data, eq_idx_gas_x, ug_idx, 2 * ((2 * miu_g + kappa_g) * phi[j, i] / ((d_x[i] + d_x[i + 1]) * d_x[i] *
+                                                     min(phi[j, i], phi[j, i + 1]))))
+                #A_reduced[eq_idx_gas_x, ug_idx] += 2 * ((2 * miu_g + kappa_g) * phi[j, i] / ((d_x[i] + d_x[i + 1]) * d_x[i] *
+                                                     #min(phi[j, i], phi[j, i + 1])))
 
             # Coefficient for u_g(j, i - 1/2)^(k + 1) at the second dx parenthesis - only if that interface is active.
             if 0 < i < N_x - 1:
                 ug_prev_pos = ug_pos_map[j, i - 1]                        # Position in the active list.
                 if ug_prev_pos >= 0:                                      # Check if the (j, i - 1) interface is active.
                     ug_prev_idx = ug_start_id + ug_prev_pos               # Position in the reduced system.
-                    A_reduced[eq_idx_gas_x, ug_prev_idx] -= 2 * ((2 * miu_g + kappa_g) * phi[j, i] /
+                    addA(rows, cols, data, eq_idx_gas_x, ug_prev_idx, -(2 * ((2 * miu_g + kappa_g) * phi[j, i] /
                                                                  ((d_x[i] + d_x[i + 1]) * d_x[i] *
-                                                              min(phi[j, i], phi[j, i + 1])))
+                                                              min(phi[j, i], phi[j, i + 1])))))
+                    #A_reduced[eq_idx_gas_x, ug_prev_idx] -= 2 * ((2 * miu_g + kappa_g) * phi[j, i] /
+                                                                 #((d_x[i] + d_x[i + 1]) * d_x[i] *
+                                                              #min(phi[j, i], phi[j, i + 1])))
 
 
             # Coefficient for v_g(j + 1/2, i)^k at the second dx parenthesis.
@@ -2313,29 +2476,38 @@ for step in range(n_main_steps):
             ug_pos_in_active = ug_pos_map[j, i]                          # Position in the active list.
             if ug_pos_in_active >= 0:                                    # Gas is also active at (j, i + 1/2) interface.
                 ug_idx = ug_start_id + ug_pos_in_active                  # Position in the reduced system.
-                A_reduced[eq_idx_water_x, ug_idx] -= k_hat                            # k_hat * u_g_(j, i + 1/2)^(k + 1)
+                addA(rows, cols, data, eq_idx_water_x, ug_idx, -k_hat)                            # k_hat * u_g_(j, i + 1/2)^(k + 1)
+                #A_reduced[eq_idx_water_x, ug_idx] -= k_hat                            # k_hat * u_g_(j, i + 1/2)^(k + 1)
 
-            A_reduced[eq_idx_water_x, uw_idx] += k_hat + k_hat_w          # (k_hat + k_hat_w) * u_w_(j, i + 1/2)^(k + 1)
+            addA(rows, cols, data, eq_idx_water_x, uw_idx, k_hat + k_hat_w)          # (k_hat + k_hat_w) * u_w_(j, i + 1/2)^(k + 1)
+            #A_reduced[eq_idx_water_x, uw_idx] += k_hat + k_hat_w          # (k_hat + k_hat_w) * u_w_(j, i + 1/2)^(k + 1)
 
             # Time derivative term:                             (m_(j, i + 1/2)^(k + 1) / dt) * u_w_(j, i + 1/2)^(k + 1)
-            A_reduced[eq_idx_water_x, uw_idx] += m_upwind / dt_step
+            addA(rows, cols, data, eq_idx_water_x, uw_idx, m_upwind / dt_step)
+            #A_reduced[eq_idx_water_x, uw_idx] += m_upwind / dt_step
 
             # Convection terms (LHS of A9 first equation) - only when the water phase is present.
             # Coefficient for u_w_(j, i + 1/2)^(k + 1)
             # The first term at dx parenthesis * u_w_(j, i + 1/2)^(k + 1)
             if i < N_x - 1:                                                           # Check if i + 2 is within bounds.
-                A_reduced[eq_idx_water_x, uw_idx] += (((phi[j, i + 1] * m_list[k_next, j, i + 1]) *
+                addA(rows, cols, data, eq_idx_water_x, uw_idx, (((phi[j, i + 1] * m_list[k_next, j, i + 1]) *
                                                      (u_w_list[k, j, i + 1] + u_w_list[k, j, i + 2])) /
-                                                    (2 * (d_x[i] + d_x[i + 1]) * min(phi[j, i], phi[j, i + 1])))
+                                                    (2 * (d_x[i] + d_x[i + 1]) * min(phi[j, i], phi[j, i + 1]))))
+                #A_reduced[eq_idx_water_x, uw_idx] += (((phi[j, i + 1] * m_list[k_next, j, i + 1]) *
+                                                     #(u_w_list[k, j, i + 1] + u_w_list[k, j, i + 2])) /
+                                                    #(2 * (d_x[i] + d_x[i + 1]) * min(phi[j, i], phi[j, i + 1])))
 
             # If i + 2 is out of bounds (we are at the rightmost column), its velocity and phi (j, i + 1) will be zero.
             # So we don't need to add anything to the A_reduced matrix.
 
             # The second term at dx parenthesis * u_w_(j, i + 1/2)^(k + 1)
             if i < N_x - 1:                                                           # Check if i + 1 is within bounds.
-                A_reduced[eq_idx_water_x, uw_idx] -= (phi[j, i] * m_list[k_next, j, i] *
+                addA(rows, cols, data, eq_idx_water_x, uw_idx, -((phi[j, i] * m_list[k_next, j, i] *
                                                     (u_w_list[k, j, i] + u_w_list[k, j, i + 1]) /
-                                                    (2 * (d_x[i] + d_x[i + 1]) * min(phi[j, i], phi[j, i + 1])))
+                                                    (2 * (d_x[i] + d_x[i + 1]) * min(phi[j, i], phi[j, i + 1])))))
+                #A_reduced[eq_idx_water_x, uw_idx] -= (phi[j, i] * m_list[k_next, j, i] *
+                                                    #(u_w_list[k, j, i] + u_w_list[k, j, i + 1]) /
+                                                    #(2 * (d_x[i] + d_x[i + 1]) * min(phi[j, i], phi[j, i + 1])))
 
             # If i + 1 is out of bounds (we are at the rightmost column), phi (j, i + 1) will be zero.
             # So we don't need to add anything to the A_reduced matrix.
@@ -2347,9 +2519,12 @@ for step in range(n_main_steps):
                                                            m_list[k_next, j, i + 1], m_list[k_next, j + 1, i + 1],
                                                            u_w_list[k, j, i + 1], u_w_list[k, j + 1, i + 1],
                                                            direction = 'horizontal')
-                A_reduced[eq_idx_water_x, uw_idx] += (phi_m_upwind_average * (v_w_list[k, j + 1, i] +
+                addA(rows, cols, data, eq_idx_water_x, uw_idx, (phi_m_upwind_average * (v_w_list[k, j + 1, i] +
                                                                             v_w_list[k, j + 1, i + 1]) /
-                                                    (4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
+                                                    (4 * d_y[j] * min(phi[j, i], phi[j, i + 1]))))
+                #A_reduced[eq_idx_water_x, uw_idx] += (phi_m_upwind_average * (v_w_list[k, j + 1, i] +
+                                                                            #v_w_list[k, j + 1, i + 1]) /
+                                                    #(4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
 
             # When we are at the rightmost column, we assume there are a ghost column next to it, where m = rho_wr,
             # phi = 0, and velocity is zero. Since we use min for phi at interfaces, and phi of this ghost column is
@@ -2362,8 +2537,10 @@ for step in range(n_main_steps):
                                                            m_list[k_next, j - 1, i + 1], m_list[k_next, j, i + 1],
                                                            u_w_list[k, j - 1, i + 1], u_w_list[k, j, i + 1],
                                                            direction = 'horizontal')
-                A_reduced[eq_idx_water_x, uw_idx] -= (phi_m_upwind_average * (v_w_list[k, j, i] + v_w_list[k, j, i + 1])
-                                                    / (4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
+                addA(rows, cols, data, eq_idx_water_x, uw_idx, -((phi_m_upwind_average * (v_w_list[k, j, i] + v_w_list[k, j, i + 1])
+                                                    / (4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))))
+                #A_reduced[eq_idx_water_x, uw_idx] -= (phi_m_upwind_average * (v_w_list[k, j, i] + v_w_list[k, j, i + 1])
+                                                    #/ (4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
 
             #elif j == 0 and i < N_x - 1:
             # Since velocity at top row is 0. so we don't need to add anything and the next comment is old.
@@ -2385,20 +2562,28 @@ for step in range(n_main_steps):
                 uw_next_pos = uw_pos_map[j, i + 1]                        # Position in the active list.
                 if uw_next_pos >= 0:                                      # Check if the (j, i + 1) interface is active.
                     uw_next_idx = uw_start_id + uw_next_pos               # Position in the reduced system.
-                    A_reduced[eq_idx_water_x, uw_next_idx] += (phi[j, i + 1] * m_list[k_next, j, i + 1] *
+                    addA(rows, cols, data, eq_idx_water_x, uw_next_idx, (phi[j, i + 1] * m_list[k_next, j, i + 1] *
                                                              (u_w_list[k, j, i + 1] + u_w_list[k, j, i + 2]) /
                                                              (2 * (d_x[i] + d_x[i + 1]) *
-                                                              min(phi[j, i], phi[j, i + 1])))
+                                                              min(phi[j, i], phi[j, i + 1]))))
+                    #A_reduced[eq_idx_water_x, uw_next_idx] += (phi[j, i + 1] * m_list[k_next, j, i + 1] *
+                                                             #(u_w_list[k, j, i + 1] + u_w_list[k, j, i + 2]) /
+                                                             #(2 * (d_x[i] + d_x[i + 1]) *
+                                                              #min(phi[j, i], phi[j, i + 1])))
 
             # Coefficient for u_w_(j, i - 1/2)^(k + 1) - only if that interface is also active.
             if 0 < i < N_x - 1:
                 uw_prev_pos = uw_pos_map[j, i - 1]                        # Position in the active list.
                 if uw_prev_pos >= 0:                                      # Check if the (j, i - 1) interface is active.
                     uw_prev_idx = uw_start_id + uw_prev_pos               # Position in the reduced system.
-                    A_reduced[eq_idx_water_x, uw_prev_idx] -= (phi[j, i] * m_list[k_next, j, i] *
+                    addA(rows, cols, data, eq_idx_water_x, uw_prev_idx, -((phi[j, i] * m_list[k_next, j, i] *
                                                              (u_w_list[k, j, i] + u_w_list[k, j, i + 1]) /
                                                              (2 * (d_x[i] + d_x[i + 1]) *
-                                                              min(phi[j, i], phi[j, i + 1])))
+                                                              min(phi[j, i], phi[j, i + 1])))))
+                    #A_reduced[eq_idx_water_x, uw_prev_idx] -= (phi[j, i] * m_list[k_next, j, i] *
+                                                             #(u_w_list[k, j, i] + u_w_list[k, j, i + 1]) /
+                                                             #(2 * (d_x[i] + d_x[i + 1]) *
+                                                              #min(phi[j, i], phi[j, i + 1])))
 
             # Coefficient for u_w_(j + 1, i + 1/2)^(k + 1) - only if that interface is also active.
             if j < N_y - 2 and i < N_x - 1:
@@ -2410,9 +2595,12 @@ for step in range(n_main_steps):
                                                                m_list[k_next, j + 1, i], m_list[k_next, j, i + 1],
                                                                m_list[k_next, j + 1, i + 1], u_w_list[k, j, i + 1],
                                                                u_w_list[k, j + 1, i + 1], direction = 'horizontal')
-                    A_reduced[eq_idx_water_x, uw_next_idx] += (phi_m_upwind_average * (v_w_list[k, j + 1, i] +
+                    addA(rows, cols, data, eq_idx_water_x, uw_next_idx, (phi_m_upwind_average * (v_w_list[k, j + 1, i] +
                                                                                      v_w_list[k, j + 1, i + 1]) /
-                                                             (4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
+                                                             (4 * d_y[j] * min(phi[j, i], phi[j, i + 1]))))
+                    #A_reduced[eq_idx_water_x, uw_next_idx] += (phi_m_upwind_average * (v_w_list[k, j + 1, i] +
+                                                                                     #v_w_list[k, j + 1, i + 1]) /
+                                                             #(4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
 
             elif j == N_y - 2 and i < N_x - 1:
                 phi_m_upwind_average = upwind_then_average(phi[j, i], phi[j + 1, i], phi[j, i + 1], phi[j + 1, i + 1],
@@ -2420,9 +2608,12 @@ for step in range(n_main_steps):
                                                            m_list[k_next, j, i + 1], m_list[k_next, j + 1, i + 1],
                                                            u_w_list[k, j, i + 1], u_w_list[k, j + 1, i + 1],
                                                            direction ='horizontal')
-                A_reduced[eq_idx_water_x, uw_idx] += (phi_m_upwind_average * (v_w_list[k, j + 1, i] +
+                addA(rows, cols, data, eq_idx_water_x, uw_idx, (phi_m_upwind_average * (v_w_list[k, j + 1, i] +
                                                                                      v_w_list[k, j + 1, i + 1]) /
-                                                             (4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
+                                                             (4 * d_y[j] * min(phi[j, i], phi[j, i + 1]))))
+                #A_reduced[eq_idx_water_x, uw_idx] += (phi_m_upwind_average * (v_w_list[k, j + 1, i] +
+                                                                                     #v_w_list[k, j + 1, i + 1]) /
+                                                             #(4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
 
                 # When we are at the j = N_y - 2 row, the velocity of the next interface equals to
                 # velocity of this interface, So will write it for this interface.
@@ -2441,9 +2632,12 @@ for step in range(n_main_steps):
                                                                m_list[k_next, j, i], m_list[k_next, j - 1, i + 1],
                                                                m_list[k_next, j, i + 1], u_w_list[k, j - 1, i + 1],
                                                                u_w_list[k, j, i + 1], direction = 'horizontal')
-                    A_reduced[eq_idx_water_x, uw_prev_idx] -= (phi_m_upwind_average * (v_w_list[k, j, i] +
+                    addA(rows, cols, data, eq_idx_water_x, uw_prev_idx, -((phi_m_upwind_average * (v_w_list[k, j, i] +
                                                                                      v_w_list[k, j, i + 1]) /
-                                                             (4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
+                                                             (4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))))
+                    #A_reduced[eq_idx_water_x, uw_prev_idx] -= (phi_m_upwind_average * (v_w_list[k, j, i] +
+                                                                                     #v_w_list[k, j, i + 1]) /
+                                                             #(4 * d_y[j] * min(phi[j, i], phi[j, i + 1])))
 
             # When we are at the bottom row, we assume there are a ghost row below that, where m = 0, phi = 1,
             # and u_w is 0. (Full of gas, and inlet velocity is upward)
@@ -2452,12 +2646,14 @@ for step in range(n_main_steps):
             # Pressure gradient terms (LHS of A9 first equation)
             # Coefficient for P_w(j, i + 1)^(k + 1)
             if i + 1 < N_x:                                                             # Column i + 1 is within bounds.
-                A_reduced[eq_idx_water_x, var_idx + 1] += 2 * S_w_interface / (d_x[i] + d_x[i + 1])
+                addA(rows, cols, data, eq_idx_water_x, var_idx + 1, 2 * S_w_interface / (d_x[i] + d_x[i + 1]))
+                #A_reduced[eq_idx_water_x, var_idx + 1] += 2 * S_w_interface / (d_x[i] + d_x[i + 1])
 
             # If i + 1 is out of bounds (we are at the rightmost column), the pressure gradient term will be zero.
 
             # Coefficient for P_w(j, i)^(k + 1)
-            A_reduced[eq_idx_water_x, var_idx] -= 2 * S_w_interface / (d_x[i] + d_x[i + 1])
+            addA(rows, cols, data, eq_idx_water_x, var_idx, -(2 * S_w_interface / (d_x[i] + d_x[i + 1])))
+            #A_reduced[eq_idx_water_x, var_idx] -= 2 * S_w_interface / (d_x[i] + d_x[i + 1])
 
             # Gravitational acceleration in the X direction is zero.
 
@@ -2473,15 +2669,19 @@ for step in range(n_main_steps):
                     phi_1 = min(phi[j, i], phi[j, i + 1])
                     phi_2 = min(phi[j + 1, i], phi[j + 1, i + 1])
                     phi_ave = min(phi_1, phi_2)
-                    A_reduced[eq_idx_water_x, uw_next_idx] -= 2 * (phi_ave * miu_w / (d_y[j] * (d_y[j] + d_y[j + 1]) *
-                                                               min(phi[j, i], phi[j, i + 1])))
+                    addA(rows, cols, data, eq_idx_water_x, uw_next_idx, -(2 * (phi_ave * miu_w / (d_y[j] * (d_y[j] + d_y[j + 1]) *
+                                                               min(phi[j, i], phi[j, i + 1])))))
+                    #A_reduced[eq_idx_water_x, uw_next_idx] -= 2 * (phi_ave * miu_w / (d_y[j] * (d_y[j] + d_y[j + 1]) *
+                                                               #min(phi[j, i], phi[j, i + 1])))
 
             elif j == N_y - 2 and i < N_x - 1:
                 phi_1 = min(phi[j, i], phi[j, i + 1])
                 phi_2 = min(phi[j + 1, i], phi[j + 1, i + 1])
                 phi_ave = min(phi_1, phi_2)
-                A_reduced[eq_idx_water_x, uw_idx] -= 2 * (phi_ave * miu_w / (d_y[j] * (d_y[j] + d_y[j + 1]) *
-                                                      min(phi[j, i], phi[j, i + 1])))
+                addA(rows, cols, data, eq_idx_water_x, uw_idx, -(2 * (phi_ave * miu_w / (d_y[j] * (d_y[j] + d_y[j + 1]) *
+                                                      min(phi[j, i], phi[j, i + 1])))))
+                #A_reduced[eq_idx_water_x, uw_idx] -= 2 * (phi_ave * miu_w / (d_y[j] * (d_y[j] + d_y[j + 1]) *
+                                                      #min(phi[j, i], phi[j, i + 1])))
 
                 # When we are at the j = N_y - 2 row, the velocity of the next interface equals to velocity of this
                 # interface, So will write it for this interface.
@@ -2491,8 +2691,10 @@ for step in range(n_main_steps):
                 phi_1 = min(phi[j, i], phi[j, i + 1])
                 phi_2 = min(phi[j + 1, i], phi[j + 1, i + 1])
                 phi_ave = min(phi_1, phi_2)
-                A_reduced[eq_idx_water_x, uw_idx] += 2 * (phi_ave * miu_w / (d_y[j] * (d_y[j] + d_y[j + 1]) *
-                                                      min(phi[j, i], phi[j, i + 1])))
+                addA(rows, cols, data, eq_idx_water_x, uw_idx, 2 * (phi_ave * miu_w / (d_y[j] * (d_y[j] + d_y[j + 1]) *
+                                                      min(phi[j, i], phi[j, i + 1]))))
+                #A_reduced[eq_idx_water_x, uw_idx] += 2 * (phi_ave * miu_w / (d_y[j] * (d_y[j] + d_y[j + 1]) *
+                                                      #min(phi[j, i], phi[j, i + 1])))
 
             # When we are at the rightmost column, the velocity on the wall is zero.
 
@@ -2519,8 +2721,10 @@ for step in range(n_main_steps):
                 phi_1 = min(phi[j - 1, i], phi[j - 1, i + 1])
                 phi_2 = min(phi[j, i], phi[j, i + 1])
                 phi_ave = min(phi_1, phi_2)
-                A_reduced[eq_idx_water_x, uw_idx] += 2 * (phi_ave * miu_w / (d_y[j] * (d_y[j] + d_y[j - 1]) *
-                                                      min(phi[j, i], phi[j, i + 1])))
+                addA(rows, cols, data, eq_idx_water_x, uw_idx, 2 * (phi_ave * miu_w / (d_y[j] * (d_y[j] + d_y[j - 1]) *
+                                                      min(phi[j, i], phi[j, i + 1]))))
+                #A_reduced[eq_idx_water_x, uw_idx] += 2 * (phi_ave * miu_w / (d_y[j] * (d_y[j] + d_y[j - 1]) *
+                                                      #min(phi[j, i], phi[j, i + 1])))
 
             #elif j == 0 and i < N_x - 1:
             # Since velocity at top row is 0. so we don't need to add anything and the next comment is old.
@@ -2542,8 +2746,10 @@ for step in range(n_main_steps):
                     phi_1 = min(phi[j - 1, i], phi[j - 1, i + 1])
                     phi_2 = min(phi[j, i], phi[j, i + 1])
                     phi_ave = min(phi_1, phi_2)
-                    A_reduced[eq_idx_water_x, uw_prev_idx] -= 2 * (phi_ave * miu_w / (d_y[j] * (d_y[j] + d_y[j - 1]) *
-                                                               min(phi[j, i], phi[j, i + 1])))
+                    addA(rows, cols, data, eq_idx_water_x, uw_prev_idx, -(2 * (phi_ave * miu_w / (d_y[j] * (d_y[j] + d_y[j - 1]) *
+                                                               min(phi[j, i], phi[j, i + 1])))))
+                    #A_reduced[eq_idx_water_x, uw_prev_idx] -= 2 * (phi_ave * miu_w / (d_y[j] * (d_y[j] + d_y[j - 1]) *
+                                                               #min(phi[j, i], phi[j, i + 1])))
 
                 # When we are at the bottom row, we assume there are a ghost row below that, where m = 0, phi = 1,
                 # and u_w is 0. (Full of gas, and inlet velocity is upward)
@@ -2591,18 +2797,24 @@ for step in range(n_main_steps):
                 uw_next_pos = uw_pos_map[j, i + 1]                        # Position in the active list.
                 if uw_next_pos >= 0:                                      # Check if the (j, i + 1) interface is active.
                     uw_next_idx = uw_start_id + uw_next_pos               # Position in the reduced system.
-                    A_reduced[eq_idx_water_x, uw_next_idx] -= 2 * ((2 * miu_w + kappa_w) * phi[j, i + 1] /
+                    addA(rows, cols, data, eq_idx_water_x, uw_next_idx, -(2 * ((2 * miu_w + kappa_w) * phi[j, i + 1] /
                                                                    ((d_x[i] + d_x[i + 1]) * d_x[i + 1] *
-                                                                min(phi[j, i], phi[j, i + 1])))
+                                                                min(phi[j, i], phi[j, i + 1])))))
+                    #A_reduced[eq_idx_water_x, uw_next_idx] -= 2 * ((2 * miu_w + kappa_w) * phi[j, i + 1] /
+                                                                   #((d_x[i] + d_x[i + 1]) * d_x[i + 1] *
+                                                                #min(phi[j, i], phi[j, i + 1])))
 
                 # When we are at the i = N_x - 2 column, the velocity of the next interface is velocity on the wall,
                 # which is zero. So we don't need to add anything to the A_reduced matrix.
 
             # Coefficient for u_w(j, i + 1/2)^(k + 1) at the first dx parenthesis.
             if i < N_x - 1:
-                A_reduced[eq_idx_water_x, uw_idx] += 2 * ((2 * miu_w + kappa_w) * phi[j, i + 1] /
+                addA(rows, cols, data, eq_idx_water_x, uw_idx, 2 * ((2 * miu_w + kappa_w) * phi[j, i + 1] /
                                                           ((d_x[i] + d_x[i + 1]) * d_x[i + 1] *
-                                                       min(phi[j, i], phi[j, i + 1])))
+                                                       min(phi[j, i], phi[j, i + 1]))))
+                #A_reduced[eq_idx_water_x, uw_idx] += 2 * ((2 * miu_w + kappa_w) * phi[j, i + 1] /
+                                                          #((d_x[i] + d_x[i + 1]) * d_x[i + 1] *
+                                                       #min(phi[j, i], phi[j, i + 1])))
 
             # Coefficient for v_w(j + 1/2, i + 1)^k at the first dx parenthesis.
             if i < N_x - 1:
@@ -2622,18 +2834,24 @@ for step in range(n_main_steps):
 
             # Coefficient for u_w(j, i + 1/2)^(k + 1) at the second dx parenthesis.
             if i < N_x - 1:
-                A_reduced[eq_idx_water_x, uw_idx] += 2 * ((2 * miu_w + kappa_w) * phi[j, i] /
+                addA(rows, cols, data, eq_idx_water_x, uw_idx, 2 * ((2 * miu_w + kappa_w) * phi[j, i] /
                                                           ((d_x[i] + d_x[i + 1]) * d_x[i] *
-                                                      min(phi[j, i], phi[j, i + 1])))
+                                                      min(phi[j, i], phi[j, i + 1]))))
+                #A_reduced[eq_idx_water_x, uw_idx] += 2 * ((2 * miu_w + kappa_w) * phi[j, i] /
+                                                          #((d_x[i] + d_x[i + 1]) * d_x[i] *
+                                                      #min(phi[j, i], phi[j, i + 1])))
 
             # Coefficient for u_w(j, i - 1/2)^(k + 1) at the second dx parenthesis - only if that interface is active.
             if 0 < i < N_x - 1:
                 uw_prev_pos = uw_pos_map[j, i - 1]                        # Position in the active list.
                 if uw_prev_pos >= 0:                                      # Check if the (j, i - 1) interface is active.
                     uw_prev_idx = uw_start_id + uw_prev_pos               # Position in the reduced system.
-                    A_reduced[eq_idx_water_x, uw_prev_idx] -= 2 * ((2 * miu_w + kappa_w) * phi[j, i] /
+                    addA(rows, cols, data, eq_idx_water_x, uw_prev_idx, -(2 * ((2 * miu_w + kappa_w) * phi[j, i] /
                                                                    ((d_x[i] + d_x[i + 1]) * d_x[i] *
-                                                               min(phi[j, i], phi[j, i + 1])))
+                                                               min(phi[j, i], phi[j, i + 1])))))
+                    #A_reduced[eq_idx_water_x, uw_prev_idx] -= 2 * ((2 * miu_w + kappa_w) * phi[j, i] /
+                                                                   #((d_x[i] + d_x[i + 1]) * d_x[i] *
+                                                               #min(phi[j, i], phi[j, i + 1])))
 
             # Coefficient for v_w(j + 1/2, i)^k at the second dx parenthesis.
             if i < N_x - 1:
